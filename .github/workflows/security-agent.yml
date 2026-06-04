@@ -1,0 +1,72 @@
+name: Security Agent Scan
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  sonar-scan:
+    name: SonarQube Scan
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run SonarQube Scanner
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: sonar-scanner
+
+  trivy-scan:
+    name: Trivy Vulnerability Scan
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scan
+        run: trivy fs --severity CRITICAL,HIGH --exit-code 0 --format json --output trivy-results.json .
+
+      - name: Run Trivy config scan (IaC)
+        run: trivy config --severity CRITICAL,HIGH --exit-code 0 k8s/
+        continue-on-error: true
+
+      - name: Upload Trivy results
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results
+          path: trivy-results.json
+
+  security-agent:
+    name: Security Agent (Blast Radius Analysis)
+    runs-on: self-hosted
+    needs: [sonar-scan, trivy-scan]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          pip3 install -r requirements.txt
+          pip3 install openai PyGithub requests
+
+      - name: Download Trivy results
+        uses: actions/download-artifact@v4
+        with:
+          name: trivy-results
+          path: .
+
+      - name: Run Security Agent
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_PROJECT: app-api
+          GITHUB_TOKEN: ${{ secrets.AGENT_PAT }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          APP_ENV: staging
+          APP_EXPOSURE: internal-vpn
+        run: python3 agent/security_agent.py
