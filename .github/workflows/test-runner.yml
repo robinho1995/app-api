@@ -1,0 +1,19 @@
+name: Runner Test
+
+on: [push, pull_request]
+
+jobs:
+  test-runner:
+    name: Self-hosted Runner Test
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check environment
+        run: |
+          echo "=== Runner Info ==="
+          echo "OS: $(uname -s) $(uname -m)"
+          echo "Python: $(python3 --version 2>/dev/null || echo 'not found')"
+          echo "Docker: $(docker --version 2>/dev/null || echo 'not found')"
+          echo "Hostname: $(hostname)"
+          echo "Runner: OK"
