@@ -44,7 +44,7 @@ SONAR_TOKEN = os.getenv("SONAR_TOKEN", "")
 SONAR_PROJECT = os.getenv("SONAR_PROJECT", "app-api")
 
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://localhost:1234/v1")
-LLM_MODEL = os.getenv("LLM_MODEL", "qwen/qwen3.5-35b-a3b")
+LLM_MODEL = os.getenv("LLM_MODEL", "google/gemma-4-26b-a4b")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "lm-studio")
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
