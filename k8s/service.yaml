@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-api-service
+  namespace: demo-app-mba
+  labels:
+    app: app-api
+spec:
+  type: ClusterIP
+  selector:
+    app: app-api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

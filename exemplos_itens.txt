@@ -1,0 +1,21 @@
+{
+  "name": "Memória RAM DDR5",
+  "description": "Memória DDR5 32GB 5600MHz",
+  "price": 689.90
+}
+{
+  "name": "Mousepad RGB",
+  "description": "Mousepad gamer RGB extendido 90x40cm",
+  "price": 129.90
+}
+{
+  "name": "Hub USB-C",
+  "description": "Hub USB-C 7 portas com HDMI e Ethernet",
+  "price": 219.00
+}
+{
+  "name": "Suporte Monitor",
+  "description": "Suporte monitor braço articulável",
+  "price": 179.90,
+  "status": "inactive"
+}
