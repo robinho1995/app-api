@@ -66,7 +66,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.AGENT_PAT }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
-          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL || 'google/gemma-4-26b-a4b' }}
           APP_ENV: staging
           APP_EXPOSURE: internal-vpn
         run: python3 agent/security_agent.py
