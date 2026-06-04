@@ -231,21 +231,29 @@ def call_llm(system_prompt: str, user_prompt: str) -> dict:
                 {"role": "user", "content": user_prompt},
             ],
             temperature=0.1,
-            max_tokens=4096,
+            max_tokens=8192,
         )
         message = response.choices[0].message
-        # Qwen3.5 reasoning models retornam conteúdo em reasoning_content ou content
         content = message.content or ""
         if hasattr(message, "reasoning_content") and message.reasoning_content:
-            # Modelos de raciocínio: a resposta útil pode vir em reasoning_content
-            # se content estiver vazio. Combinar ambos.
             if not content.strip():
                 content = message.reasoning_content
+            else:
+                content = content.strip()
+        content = content.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        # Remove thinking/reasoning prefix if present
+        if content.startswith("Thinking Process:") or content.startswith("Thinking:"):
+            lines = content.split("\n")
+            json_start = None
+            for i, line in enumerate(lines):
+                if line.strip().startswith("{"):
+                    json_start = i
+                    break
+            if json_start is not None:
+                content = "\n".join(lines[json_start:])
     except Exception as e:
         print(f"[ERROR] Falha ao chamar LLM: {e}")
         sys.exit(1)
-
-    content = content.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
 
     try:
         return json.loads(content)
