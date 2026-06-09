@@ -13,36 +13,38 @@ APP_CONTEXT = {
     "runtime": "Python 3.11 FastAPI",
 }
 
-SECURITY_AGENT_SYSTEM = """You are a senior security engineer reviewing findings for a CI/CD pipeline.
+SECURITY_AGENT_SYSTEM = """Voce e um engenheiro de seguranca sênior revisando findings para um pipeline de CI/CD.
 
-App context:
-- Service: {service}
-- Environment: {environment}
-- Network zone: {network_zone}
+Contexto do app:
+- Servico: {service}
+- Ambiente: {environment}
+- Zona de rede: {network_zone}
 - Runtime: {runtime}
 
-Prioritise by blast radius:
-- P1: Public-facing or VPN-exposed service with RCE, auth bypass, or secret leak.
-- P2: Internal service with privilege escalation, SSRF, or unhealthy dependency chain.
-- P3: Low-impact info leaks, style issues, or non-exploitable misconfigurations.
+Priorize por blast radius:
+- P1: Servico publico ou exposto via VPN com RCE, bypass de autenticacao, ou vazamento de segredos.
+- P2: Servico interno com escalada de privilegio, SSRF, ou cadeia de dependencias unhealthy.
+- P3: Vazamento de informacoes de baixo impacto, problemas de estilo, ou misconfiguracoes nao exploritaveis.
 
-For each finding state:
-1. Severity (P1/P2/P3)
-2. Affected component
-3. Remediation (specific code fix or dependency bump)
-4. Blast-radius justification
+Para cada finding, informe:
+1. Severidade (P1/P2/P3)
+2. Componente afetado
+3. Recomendacao (fix especifico no codigo ou bump de dependencia)
+4. Justificativa do blast radius
 
-Output valid JSON only with structure:
+Responda SOMENTE em portugues brasileiro.
+
+Output SOMENTE JSON valido com a estrutura:
 {{
-  "summary": "...",
+  "summary": "resumo em portugues",
   "findings": [
     {{
       "id": "...",
       "severity": "P1|P2|P3",
       "component": "...",
-      "title": "...",
-      "remediation": "...",
-      "blast_radius": "..."
+      "title": "titulo em portugues",
+      "remediation": "recomendacao em portugues",
+      "blast_radius": "justificativa em portugues"
     }}
   ]
 }}""".format(**APP_CONTEXT)
@@ -114,19 +116,19 @@ def format_findings_for_prompt(sonar_issues, trivy_findings):
                 f"rule={issue.get('rule', '')}"
             )
     else:
-        lines.append("(none)")
+        lines.append("(nenhum)")
 
     lines.append("")
     lines.append("=== Trivy Vulnerabilities ===")
     if trivy_findings:
         for f in trivy_findings:
-            fix = f" (fix: {f['fixed']})" if f["fixed"] else " (no fix available)"
+            fix = f" (fix: {f['fixed']})" if f["fixed"] else " (sem fix disponível)"
             lines.append(
-                f"- [{f['severity']}] {f['vulnerability_id']} in {f['pkg']} "
+                f"- [{f['severity']}] {f['vulnerability_id']} em {f['pkg']} "
                 f"{f['installed']}{fix} — {f['title']}"
             )
     else:
-        lines.append("(none)")
+        lines.append("(nenhuma)")
 
     return "\n".join(lines)
 
@@ -182,63 +184,63 @@ def comment_on_pr(analysis):
     repo = g.get_repo(repo_name)
     pr = repo.get_pull(int(pr_number))
 
-    summary = analysis.get("summary", "See findings below.")
+    summary = analysis.get("summary", "Veja os findings abaixo.")
     findings = analysis.get("findings", [])
 
     p1 = [f for f in findings if f.get("severity") == "P1"]
     p2 = [f for f in findings if f.get("severity") == "P2"]
     p3 = [f for f in findings if f.get("severity") == "P3"]
 
-    comment = f"## 🔒 Security Agent Report\n\n{summary}\n\n"
-    comment += f"| Priority | Count |\n|----------|-------|\n| P1 | {len(p1)} |\n| P2 | {len(p2)} |\n| P3 | {len(p3)} |\n\n"
+    comment = f"## Relatorio do Agente de Seguranca\n\n{summary}\n\n"
+    comment += f"| Prioridade | Quantidade |\n|------------|------------|\n| P1 | {len(p1)} |\n| P2 | {len(p2)} |\n| P3 | {len(p3)} |\n\n"
 
     if p1:
-        comment += "### 🔴 P1 — Critical\n"
+        comment += "### 🔴 P1 — Critico\n"
         for f in p1:
             comment += f"- **{f.get('id', '?')}**: {f.get('title', '')} — _{f.get('remediation', '')}_\n"
             comment += f"  Blast radius: {f.get('blast_radius', 'N/A')}\n"
         comment += "\n"
 
     if p2:
-        comment += "### 🟡 P2 — High\n"
+        comment += "### 🟡 P2 — Alto\n"
         for f in p2:
             comment += f"- **{f.get('id', '?')}**: {f.get('title', '')} — _{f.get('remediation', '')}_\n"
             comment += f"  Blast radius: {f.get('blast_radius', 'N/A')}\n"
         comment += "\n"
 
     if p3:
-        comment += "### 🟢 P3 — Low\n"
+        comment += "### 🟢 P3 — Baixo\n"
         for f in p3:
             comment += f"- **{f.get('id', '?')}**: {f.get('title', '')} — _{f.get('remediation', '')}_\n"
             comment += f"  Blast radius: {f.get('blast_radius', 'N/A')}\n"
         comment += "\n"
 
     pr.create_issue_comment(comment)
-    print(f"  Comment posted on PR #{pr_number}")
+    print(f"  Comentario postado no PR #{pr_number}")
 
 
 def main():
-    print("[1/4] Fetching SonarQube issues...")
+    print("[1/4] Buscando issues do SonarQube...")
     sonar_issues = fetch_sonarqube_issues()
-    print(f"  Found {len(sonar_issues)} issue(s)")
+    print(f"  Encontradas {len(sonar_issues)} issue(s)")
 
-    print("[2/4] Fetching Trivy findings...")
+    print("[2/4] Buscando findings do Trivy...")
     trivy_findings = fetch_trivy_findings()
-    print(f"  Found {len(trivy_findings)} vulnerability(ies)")
+    print(f"  Encontradas {len(trivy_findings)} vulnerabilidade(s)")
 
-    print("[3/4] Sending findings to LLM for analysis...")
+    print("[3/4] Enviando findings para analise do LLM...")
     user_prompt = format_findings_for_prompt(sonar_issues, trivy_findings)
     analysis = call_llm(SECURITY_AGENT_SYSTEM, user_prompt)
-    print(f"  Analysis complete — {len(analysis.get('findings', []))} prioritized finding(s)")
+    print(f"  Analise concluida — {len(analysis.get('findings', []))} finding(s) priorizado(s)")
 
-    print("[4/4] Posting analysis as comment on PR...")
+    print("[4/4] Postando analise como comentario no PR...")
     try:
         comment_on_pr(analysis)
     except Exception as exc:
-        print(f"  [ERROR] PR comment failed: {exc}")
+        print(f"  [ERROR] Falha ao comentar no PR: {exc}")
         raise SystemExit(1)
 
-    print("Done.")
+    print("Concluido.")
 
 
 if __name__ == "__main__":
