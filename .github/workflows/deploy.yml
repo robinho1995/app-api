@@ -4,8 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize]
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
     inputs:
       action:
@@ -20,6 +19,7 @@ on:
 jobs:
   test:
     runs-on: self-hosted
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +40,7 @@ jobs:
   build:
     runs-on: self-hosted
     needs: test
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
 
@@ -53,10 +54,15 @@ jobs:
 
   deploy:
     runs-on: self-hosted
-    needs: build
-    if: github.ref == 'refs/heads/main'
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'deploy')
     steps:
       - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t app-api:latest -t app-api:${{ github.sha }} .
 
       - name: Load image into k3d
         run: |
@@ -87,10 +93,11 @@ jobs:
 
   destroy:
     runs-on: self-hosted
-    if: github.event.inputs.action == 'destroy'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
     steps:
       - name: Delete k3d resources
         run: |
           export KUBECONFIG=$(k3d kubeconfig write mba-cluster)
           kubectl delete all --all -n demo-app-mba --timeout=60s || true
-          echo "✅ k3d resources deleted"
+          kubectl delete statefulset postgresql redis -n demo-app-mba --timeout=60s || true
+          echo "✅ k3d resources destroyed"
