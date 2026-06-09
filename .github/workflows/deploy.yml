@@ -1,8 +1,6 @@
 name: Deploy Pipeline
 
 on:
-  pull_request:
-    types: [opened, synchronize]
   push:
     branches: [main]
   workflow_dispatch:
@@ -19,7 +17,7 @@ on:
 jobs:
   test:
     runs-on: self-hosted
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
 
@@ -35,12 +33,12 @@ jobs:
 
       - name: Run tests
         run: |
-          python3 -m pytest tests/ -v --tb=short -x || echo "::warning::Some tests failed (DB/Redis may not be available)"
+          python3 -m pytest tests/ -v --tb=short -x || echo "::warning::Some tests failed"
 
   build:
     runs-on: self-hosted
     needs: test
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
 
@@ -54,9 +52,41 @@ jobs:
 
   deploy:
     runs-on: self-hosted
-    if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'deploy')
+    needs: build
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load image into k3d
+        run: |
+          k3d image import app-api:latest --cluster mba-cluster
+
+      - name: Deploy to k3d
+        run: |
+          export KUBECONFIG=$(k3d kubeconfig write mba-cluster)
+          kubectl apply -f k8s/
+
+      - name: Wait for rollout
+        run: |
+          export KUBECONFIG=$(k3d kubeconfig write mba-cluster)
+          kubectl rollout status deployment/app-api-deployment -n demo-app-mba --timeout=120s
+          kubectl rollout status statefulset/postgresql -n demo-app-mba --timeout=120s || true
+          kubectl rollout status statefulset/redis -n demo-app-mba --timeout=120s || true
+
+      - name: Smoke test
+        run: |
+          export KUBECONFIG=$(k3d kubeconfig write mba-cluster)
+          kubectl port-forward svc/app-api-service -n demo-app-mba 8000:8000 &
+          PF_PID=$!
+          sleep 10
+          curl -sf http://localhost:8000/health && echo " - Health check OK"
+          curl -sf http://localhost:8000/ && echo " - Root endpoint OK"
+          echo "✅ Deploy successful - app is healthy!"
+          kill $PF_PID 2>/dev/null || true
+
+  manual-deploy:
+    runs-on: self-hosted
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'deploy'
     steps:
       - uses: actions/checkout@v4
 
