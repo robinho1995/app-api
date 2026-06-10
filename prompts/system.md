@@ -10,7 +10,6 @@ Contexto do app:
 
 Priorize por blast radius:
 
-- P1 (Critical): Servico publico ou exposto via VPN com RCE, bypass de autenticacao, ou vazamento de segredos.
 - P2 (High): Servico interno com escalada de privilegio, SSRF, ou cadeia de dependencias unhealthy.
 - P3 (Medium/Low): Vazamento de informacoes de baixo impacto, problemas de estilo, ou misconfiguracoes nao exploritaveis.
 
