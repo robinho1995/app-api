@@ -179,3 +179,12 @@
     - type: is-json
     - type: javascript
       value: "JSON.parse(output).category === 'technical'"
+
+- description: "Deploy de servicos"
+  vars:
+    input: "Ao fazer o deploy, estou me deparando com erros no Sistema Operacional. Porem, esse problema esta estranho"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'billing'"
+    
