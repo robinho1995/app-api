@@ -96,3 +96,6 @@ Output:
   "suggested_priority": "medium"
 }
 ```
+
+Classifique o ticket abaixo:
+{{input}}

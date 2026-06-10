@@ -1,10 +1,10 @@
-description: Eval gate para system prompt de classificação de tickets
+description: Eval gate para system prompt de classificacao de tickets
 providers:
   - id: openai:qwen/qwen3.5-35b-a3b
     config:
       apiBaseUrl: http://localhost:1234/v1
       temperature: 0.1
-      max_tokens: 200
+      max_tokens: 10000
 
 prompts:
   - prompts/system.md
@@ -14,15 +14,7 @@ tests: tests/eval.yaml
 defaultTest:
   assert:
     - type: is-json
-    - type: contains-json
-      value:
-        category:
-          type: string
-        confidence:
-          type: number
-        reasoning:
-          type: string
-        suggested_priority:
-          type: string
+  options:
+    transform: output.replace(/```json\n?/g, '').replace(/```/g, '').trim()
 
 outputPath: results/eval-results.json

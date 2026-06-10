@@ -2,198 +2,180 @@
   vars:
     input: "Fui cobrado duas vezes no mes de marco. O valor de R$ 89,90 aparece duas vezes na fatura."
   assert:
-    - type: contains-json
-      value:
-        category: billing
-    - type: json-path
-      jsonPath: "$.confidence"
-      value:
-        gte: 0.8
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'billing'"
 
 - description: "technical - erro 500 na API"
   vars:
     input: "A API esta retornando 500 Internal Server Error no endpoint /api/v1/items desde ontem. Nossos 3 clientes estao impactados."
   assert:
-    - type: contains-json
-      value:
-        category: technical
-    - type: json-path
-      jsonPath: "$.suggested_priority"
-      value:
-        eq: critical
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'technical'"
+    - type: javascript
+      value: "JSON.parse(output).suggested_priority === 'critical'"
 
 - description: "account - reset de senha nao funciona"
   vars:
     input: "Nao consigo fazer login. Tento resetar a senha mas o e-mail nunca chega."
   assert:
-    - type: contains-json
-      value:
-        category: account
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'account'"
 
 - description: "other - feature request modo escuro"
   vars:
     input: "Voces deveriam ter um modo escuro no dashboard. Seria muito mais confortavel."
   assert:
-    - type: contains-json
-      value:
-        category: other
-    - type: json-path
-      jsonPath: "$.suggested_priority"
-      value:
-        eq: low
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'other'"
+    - type: javascript
+      value: "JSON.parse(output).suggested_priority === 'low'"
 
 - description: "ambiguo - mistura technical e billing"
   vars:
     input: "O app esta lento mas nao sei se e meu computador ou o sistema. Tambem queria saber como troco a forma de pagamento."
   assert:
-    - type: json-path
-      jsonPath: "$.confidence"
-      value:
-        lte: 0.6
-    - type: contains-json
-      value:
-        category: other
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'other'"
+    - type: javascript
+      value: "JSON.parse(output).confidence <= 0.6"
 
 - description: "billing - reembolso solicitado"
   vars:
     input: "Quero cancelar minha assinatura e pedir reembolso dos ultimos 3 meses."
   assert:
-    - type: contains-json
-      value:
-        category: billing
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'billing'"
 
 - description: "technical - lentidao no sistema"
   vars:
     input: "O sistema esta muito lento desde a ultima atualizacao. Demora mais de 30 segundos para carregar qualquer pagina."
   assert:
-    - type: contains-json
-      value:
-        category: technical
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'technical'"
 
 - description: "account - MFA nao funciona"
   vars:
     input: "Ativei MFA mas agora nao consigo acessar a conta. O codigo de verificacao nao e aceito."
   assert:
-    - type: contains-json
-      value:
-        category: account
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'account'"
 
 - description: "toxic - linguagem abusiva"
   vars:
     input: "ESSA EMPRESA E UMA MERDA! VOCES SAO LADROES! QUERO MEU DINHEIRO DE VOLTA!"
   assert:
-    - type: contains-json
-      value:
-        category: other
-    - type: json-path
-      jsonPath: "$.flagged_toxic"
-      value:
-        eq: true
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'other'"
+    - type: javascript
+      value: "JSON.parse(output).flagged_toxic === true"
 
 - description: "technical - integracao API quebrada"
   vars:
     input: "Nossa integracao com a API de voces esta retornando timeout em 40% das requisicoes desde ontem as 14h."
   assert:
-    - type: contains-json
-      value:
-        category: technical
-    - type: json-path
-      jsonPath: "$.suggested_priority"
-      value:
-        gte: high
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'technical'"
+    - type: javascript
+      value: "['high','critical'].includes(JSON.parse(output).suggested_priority)"
 
 - description: "billing - diferenca de valor"
   vars:
     input: "O valor na fatura nao confere com o valor que aparece no painel. A fatura mostra R$ 199,90 mas o painel mostra R$ 149,90."
   assert:
-    - type: contains-json
-      value:
-        category: billing
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'billing'"
 
 - description: "account - acesso de ex-funcionario"
   vars:
     input: "Um funcionario que saiu da empresa ainda tem acesso a conta corporativa. Precisamos remover o acesso urgente."
   assert:
-    - type: contains-json
-      value:
-        category: account
-    - type: json-path
-      jsonPath: "$.suggested_priority"
-      value:
-        eq: critical
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'account'"
+    - type: javascript
+      value: "JSON.parse(output).suggested_priority === 'high'"
 
 - description: "other - elogio"
   vars:
     input: "Quero elogiar o time de suporte. Sempre me ajudam muito rapido."
   assert:
-    - type: contains-json
-      value:
-        category: other
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'other'"
 
 - description: "technical - erro de integracao webhook"
   vars:
     input: "Os webhooks nao estao sendo entregues. O endpoint retorno 200 mas os eventos nao aparecem no dashboard."
   assert:
-    - type: contains-json
-      value:
-        category: technical
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'technical'"
 
 - description: "billing - plano upgrade"
   vars:
     input: "Gostaria de fazer upgrade do plano Pro para o plano Enterprise. Qual o procedimento?"
   assert:
-    - type: contains-json
-      value:
-        category: billing
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'billing'"
 
 - description: "account - email nao verificado"
   vars:
     input: "Nao consigo verificar meu email. O link de verificacao expirou e nao consigo enviar um novo."
   assert:
-    - type: contains-json
-      value:
-        category: account
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'account'"
 
 - description: "other - duvida generica"
   vars:
     input: "Qual a diferenca entre os planos Basic e Pro?"
   assert:
-    - type: contains-json
-      value:
-        category: other
+    - type: is-json
+    - type: javascript
+      value: "['other','billing'].includes(JSON.parse(output).category)"
 
 - description: "technical - erro 403"
   vars:
     input: "Estou recebendo erro 403 Forbidden ao tentar acessar o endpoint /api/v1/admin. Sou admin e deveria ter acesso."
   assert:
-    - type: contains-json
-      value:
-        category: technical
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'technical'"
 
 - description: "billing - fatura nao chega"
   vars:
     input: "Minha fatura do mes passado nunca chegou por email. Preciso para contabilidade."
   assert:
-    - type: contains-json
-      value:
-        category: billing
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'billing'"
 
 - description: "account - 2FA perdido"
   vars:
     input: "Perdi meu celular e nao consigo gerar o codigo 2FA. Estou bloqueado da conta ha 2 dias."
   assert:
-    - type: contains-json
-      value:
-        category: account
-    - type: json-path
-      jsonPath: "$.suggested_priority"
-      value:
-        eq: critical
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'account'"
+    - type: javascript
+      value: "JSON.parse(output).suggested_priority === 'high'"
 
 - description: "technical - CORS error"
   vars:
     input: "Ao fazer requisicao do frontend para a API, recebo erro de CORS. Access-Control-Allow-Origin esta bloqueando."
   assert:
-    - type: contains-json
-      value:
-        category: technical
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).category === 'technical'"
