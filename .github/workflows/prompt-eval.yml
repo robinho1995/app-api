@@ -31,7 +31,10 @@ jobs:
           import json
           with open('results/eval-results.json') as f:
               data = json.load(f)
-          print(data['stats']['passRate'])
+          stats = data['results']['stats']
+          total = stats['successes'] + stats['failures'] + stats['errors']
+          pass_rate = stats['successes'] / total if total > 0 else 0
+          print(f'{pass_rate:.4f}')
           ")
           echo "Pass rate: ${PASS_RATE}"
           THRESHOLD=0.85
