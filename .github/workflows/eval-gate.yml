@@ -1,0 +1,49 @@
+name: Prompt Eval Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - prompts/**
+
+jobs:
+  eval:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Promptfoo
+        run: npm install -g promptfoo
+
+      - name: Run Promptfoo eval
+        env:
+          LLM_BASE_URL: http://localhost:1234/v1
+          OPENAI_API_KEY: lm-studio
+        run: promptfoo eval --config promptfooconfig.yaml
+
+      - name: Check accuracy threshold
+        run: |
+          python3 -c "
+          import json, sys
+          with open('results/eval-results.json') as f:
+              data = json.load(f)
+          stats = data['results']['stats']
+          successes = stats.get('successes', 0)
+          failures = stats.get('failures', 0)
+          errors = stats.get('errors', 0)
+          total = successes + failures + errors
+          if total == 0:
+              print('::error::No test results found')
+              sys.exit(1)
+          passRate = successes / total
+          print(f'Pass rate: {passRate:.2%} ({successes}/{total})')
+          if passRate < 0.85:
+              print(f'::error::Accuracy {passRate:.2%} is below threshold 85%. Merge blocked.')
+              sys.exit(1)
+          print(f'Accuracy {passRate:.2%} meets threshold 85%. Eval passed.')
+          "
