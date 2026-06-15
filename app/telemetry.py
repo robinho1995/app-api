@@ -63,7 +63,7 @@ atexit.register(_flush_telemetry)
 def setup_telemetry(
     app: Optional[FastAPI] = None,
     app_name: str = "app-api",
-    endpoint: str = "otel-collector.observability.svc.cluster.local:4317",
+    endpoint: str = "otel-collector.observability.svc.cluster.local:4318",
     service_version: str = "1.0.0",
     deployment_environment: str = "dev",
 ) -> None:
