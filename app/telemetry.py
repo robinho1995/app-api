@@ -30,6 +30,18 @@ _meter: Optional[metrics.Meter] = None
 _request_duration_hist: Optional[metrics.Histogram] = None
 _request_count_counter: Optional[metrics.Counter] = None
 
+ATTR_HTTP_REQUEST_METHOD = "http.request.method"
+ATTR_URL_PATH = "url.path"
+ATTR_HTTP_RESPONSE_STATUS_CODE = "http.response.status_code"
+ATTR_DB_SYSTEM = "db.system"
+ATTR_DB_STATEMENT = "db.statement"
+
+ATTR_GEN_AI_SYSTEM = "gen_ai.system"
+ATTR_GEN_AI_REQUEST_MODEL = "gen_ai.request.model"
+ATTR_GEN_AI_USAGE_INPUT_TOKENS = "gen_ai.usage.input_tokens"
+ATTR_GEN_AI_USAGE_OUTPUT_TOKENS = "gen_ai.usage.output_tokens"
+ATTR_GEN_AI_TOOL_NAME = "gen_ai.tool.name"
+
 
 def setup_telemetry(
     app_name: str = "app-api",
@@ -47,7 +59,6 @@ def setup_telemetry(
         }
     )
 
-    # --- TracerProvider ---
     try:
         otlp_span_exporter = OTLPSpanExporter(endpoint=endpoint, insecure=True)
         _tracer_provider = TracerProvider(resource=resource)
@@ -64,7 +75,6 @@ def setup_telemetry(
     except Exception as exc:
         logger.error("Falha ao configurar TracerProvider: %s", exc)
 
-    # --- MeterProvider ---
     try:
         otlp_metric_exporter = OTLPMetricExporter(endpoint=endpoint, insecure=True)
         metric_reader = PeriodicExportingMetricReader(
@@ -78,7 +88,6 @@ def setup_telemetry(
     except Exception as exc:
         logger.error("Falha ao configurar MeterProvider: %s", exc)
 
-    # --- Meter + instruments ---
     _meter = metrics.get_meter(app_name, "1.0.0")
 
     _request_duration_hist = _meter.create_histogram(
@@ -95,7 +104,6 @@ def setup_telemetry(
         description="Total count of HTTP server requests",
     )
 
-    # --- Auto-instrumentation ---
     try:
         SQLAlchemyInstrumentor().instrument()
         logger.info("SQLAlchemyInstrumentor habilitado")
@@ -115,7 +123,6 @@ def setup_telemetry(
         except Exception as exc:
             logger.error("Falha ao instrumentar FastAPI: %s", exc)
 
-    # --- Graceful shutdown ---
     atexit.register(_shutdown)
 
 
@@ -123,14 +130,14 @@ def _shutdown() -> None:
     if _tracer_provider is not None:
         try:
             _tracer_provider.shutdown()
-            logger.info("TracerProvider shutdown concluído")
+            logger.info("TracerProvider shutdown concluido")
         except Exception as exc:
             logger.error("Erro no shutdown do TracerProvider: %s", exc)
 
     if _meter_provider is not None:
         try:
             _meter_provider.shutdown()
-            logger.info("MeterProvider shutdown concluído")
+            logger.info("MeterProvider shutdown concluido")
         except Exception as exc:
             logger.error("Erro no shutdown do MeterProvider: %s", exc)
 
@@ -147,9 +154,9 @@ async def otel_middleware(request: Request, call_next) -> Response:
     status_code = str(response.status_code)
 
     attributes = {
-        "http.request.method": method,
-        "url.path": path,
-        "http.response.status_code": status_code,
+        ATTR_HTTP_REQUEST_METHOD: method,
+        ATTR_URL_PATH: path,
+        ATTR_HTTP_RESPONSE_STATUS_CODE: status_code,
     }
 
     if _request_duration_hist is not None:

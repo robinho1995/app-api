@@ -1,27 +1,27 @@
-name: Validate
+name: Validate OTel Instrumentation
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   validate:
     runs-on: self-hosted
-    timeout-minutes: 10
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install deps
+      - name: Install dependencies
         run: python3 -m pip install -r requirements.txt
 
-      - name: Install tools
-        run: python3 -m pip install ruff pytest
+      - name: Install lint and test tools
+        run: python3 -m pip install ruff pytest pytest-asyncio httpx
 
-      - name: Ruff
+      - name: Run ruff lint
         run: python3 -m ruff check app/ tests/
 
-      - name: Tests
+      - name: Run pytest
         run: python3 -m pytest tests/ -v
