@@ -1,0 +1,173 @@
+- description: "P1 - RCE remoto via backdoor em dependencia"
+  vars:
+    input: "CVE-2024-3094 no xz-utils: backdoor em compressor que permite RCE remoto em servidores SSH expostos publicamente."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P1')"
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.id.includes('CVE-2024-3094'))"
+
+- description: "P1 - segredo hardcoded em codigo-fonte"
+  vars:
+    input: "SonarQube: segredo hardcoded no arquivo config.py — string de conexao com banco de dados incluindo senha em texto claro. Componente: app-api/config.py."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P1')"
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.component.includes('config.py'))"
+
+- description: "P1 - SQL injection em endpoint autenticado publico"
+  vars:
+    input: "SonarQube: SQL injection no endpoint /api/v1/users — concatenacao direta de entrada do usuario em query SQL. O endpoint e publico e nao requer autenticacao."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P1')"
+
+- description: "P2 - SSRF em servico interno"
+  vars:
+    input: "Trivy: CVE-2023-44487 (HTTP/2 Rapid Reset) na dependencia golang.org/x/net — ataque DoS via protocolo HTTP/2. O servico roda em rede interna."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P2')"
+
+- description: "P2 - escalada de privilegio em API interna"
+  vars:
+    input: "SonarQube: IDs sequenciais em /api/v1/admin/users permitem escalada de privilegio. Usuario regular pode acessar endpoints admin alterando o ID na request. Servico interno via VPN."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => ['P1','P2'].includes(f.severity))"
+
+- description: "P2 - dependencia com vulnerabilidade conhecida em cadeia de supply"
+  vars:
+    input: "Trivy: CVE-2023-36664 em PipeTeX — execucao de comando remoto via processo de compilacao LaTeX em servico de geracao de relatorios interno."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => ['P2','P1'].includes(f.severity))"
+
+- description: "P3 - vazamento de informacoes de baixo impacto em logs"
+  vars:
+    input: "SonarQube: funcao de logging escreve dados de sessao do usuario em texto claro, incluindo IP e user-agent. Componente: app-api/logging.py."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P3')"
+
+- description: "P3 - codigo morto sem risco"
+  vars:
+    input: "SonarQube: 3 funcoes nao referenciadas em services/auth.py — codigo morto sem impacto em seguranca ou funcionalidade."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P3')"
+
+- description: "P3 - XSS refletido em endpoint descontinuado"
+  vars:
+    input: "Trivy: CVE-2024-001 na lib_XML2_server (CVSS 2.1) — XSS refletido em endpoint /admin/legacy que esta descontinuado e nao e mais utilizado."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P3')"
+
+- description: "P3 - misconfiguracao nao exploritiva"
+  vars:
+    input: "SonarQube: CORS configurado com wildcard (*) em ambiente de staging. Nao ha dados sensiveis expostos e o ambiente nao e acessivel externamente."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P3')"
+
+- description: "P1 - autenticacao bypass em servicopublico"
+  vars:
+    input: "SonarQube: Bypass de autenticacao no endpoint /api/v1/auth/token — token JWT expirado ainda e aceito pelo servidor. O servico e publico e acessivel pela internet."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P1')"
+
+- description: "P1 - vazamento de credenciais em repositorio publico"
+  vars:
+    input: "Trivy: arquivo .env com AWS_ACCESS_KEY_ID e AWS_SECRET_ACCESS_KEY commitado no repositorio. O repositorio e publico no GitHub."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P1')"
+
+- description: "P2 - dependencia desatualizada com CVE conhecida"
+  vars:
+    input: "Trivy: CVE-2023-23916 em urllib3 antes de 1.26.18 — leak de informacoes de header via redirect. Servico interno com acesso limitado."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => ['P2','P3'].includes(f.severity))"
+
+- description: "P2 - SSRF com acesso a metadata de cloud"
+  vars:
+    input: "SonarQube: SSRF no endpoint /api/v1/fetch-url — usuario pode fornecer URL que o servidor acessa. Endpoint autenticado mas sem restricao de URL. Servico em rede interna com acesso a metadata cloud."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => ['P1','P2'].includes(f.severity))"
+
+- description: "P3 - header de seguranca ausente"
+  vars:
+    input: "SonarQube: Header X-Content-Type-Options ausente na configuracao do servidor. Nao ha evidencia de exploit ativo e o header e informativo."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P3')"
+
+- description: "mixed - P1 e P3 juntos"
+  vars:
+    input: "SonarQube: RCE via deserializacao insegura em pickle no endpoint /api/v1/import (publico). Trivy: versao desatualizada do pacote requests (non-security) em requirements.txt."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P1')"
+    - type: javascript
+      value: "JSON.parse(output).findings.length >= 2"
+
+- description: "no findings - sem vulnerabilidades"
+  vars:
+    input: "No security findings to analyze. SonarQube and Trivy returned clean reports with no issues detected."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.length === 0 || JSON.parse(output).summary.toLowerCase().includes('no finding') || JSON.parse(output).summary.toLowerCase().includes('sem finding')"
+
+- description: "P1 - path traversal em servico publico"
+  vars:
+    input: "SonarQube: Path traversal no endpoint /api/v1/files/download — usuario pode acessar arquivos fora do diretorio permitido via ../. Servico publico com dados sensiveis no servidor."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P1')"
+
+- description: "P2 - token de sessao sem expiracao em servico interno"
+  vars:
+    input: "SonarQube: Token de sessao sem expiracao configurada em services/session.py. Sessoes nunca expiram automaticamente. Servico acessivel via VPN interna."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => ['P2','P1'].includes(f.severity))"
+
+- description: "P3 - informacao de versao exposta em headers"
+  vars:
+    input: "Trivy: Versao do servidor (FastAPI 0.100.0) exposta no header Server. Sem impacto direto em seguranca — apenas informacional."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => f.severity === 'P3')"
+
+- description: "P2 - comando injection em pipeline CI interno"
+  vars:
+    input: "SonarQube: Command injection no script deploy.sh — variavel de ambiente nao sanitizada e passada para subprocess.call(). Servico interno com acesso restrito via VPN."
+  assert:
+    - type: is-json
+    - type: javascript
+      value: "JSON.parse(output).findings.some(f => ['P2','P1'].includes(f.severity))"

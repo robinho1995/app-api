@@ -1,0 +1,20 @@
+description: Eval gate para system prompt de triage de security findings por blast radius
+providers:
+  - id: openai:qwen/qwen3.5-35b-a3b
+    config:
+      apiBaseUrl: http://localhost:1234/v1
+      temperature: 0.1
+      max_tokens: 10000
+
+prompts:
+  - prompts/system.md
+
+tests: tests/eval.yaml
+
+defaultTest:
+  assert:
+    - type: is-json
+  options:
+    transform: output.replace(/```json\n?/g, '').replace(/```/g, '').trim()
+
+outputPath: results/eval-results.json
