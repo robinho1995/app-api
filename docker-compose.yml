@@ -69,6 +69,19 @@ services:
     networks:
       - app-network
 
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.96.0
+    container_name: app-otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8889:8889"
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge

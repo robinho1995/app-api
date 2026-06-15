@@ -11,6 +11,7 @@ from app.config import settings
 from app.database import engine, Base, check_db_connection
 from app.routers import health
 from app.routers import items as items_router
+from app.telemetry import setup_telemetry
 import redis.asyncio as aioredis
 
 logging.basicConfig(
@@ -135,6 +136,8 @@ app = FastAPI(
     version=settings.APP_VERSION,
     lifespan=lifespan,
 )
+
+setup_telemetry(app=app, app_name="app-api", endpoint="http://localhost:4317")
 
 app.add_middleware(
     CORSMiddleware,
