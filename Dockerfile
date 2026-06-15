@@ -21,7 +21,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PORT=8000 \
     OTEL_TRACES_EXPORTER=otlp \
     OTEL_METRICS_EXPORTER=otlp \
-    OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector.observability.svc.cluster.local:4318 \
+    OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector.observability.svc.cluster.local:4318 \
     OTEL_EXPORTER_OTLP_PROTOCOL=http \
     OTEL_RESOURCE_ATTRIBUTES=service.name=app-api,service.version=1.0.0,deployment.environment=dev
 

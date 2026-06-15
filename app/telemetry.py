@@ -14,8 +14,8 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
@@ -63,7 +63,7 @@ atexit.register(_flush_telemetry)
 def setup_telemetry(
     app: Optional[FastAPI] = None,
     app_name: str = "app-api",
-    endpoint: str = "otel-collector.observability.svc.cluster.local:4318",
+    endpoint: str = "http://otel-collector.observability.svc.cluster.local:4318",
     service_version: str = "1.0.0",
     deployment_environment: str = "dev",
 ) -> None:
@@ -79,7 +79,7 @@ def setup_telemetry(
     )
 
     try:
-        trace_exporter = OTLPSpanExporter(endpoint=endpoint, insecure=True)
+        trace_exporter = OTLPSpanExporter(endpoint=f"{endpoint}/v1/traces")
         span_processor = BatchSpanProcessor(
             trace_exporter,
             max_queue_size=2048,
@@ -94,7 +94,7 @@ def setup_telemetry(
         logger.error("Failed to configure TracerProvider: %s", exc)
 
     try:
-        metric_exporter = OTLPMetricExporter(endpoint=endpoint, insecure=True)
+        metric_exporter = OTLPMetricExporter(endpoint=f"{endpoint}/v1/metrics")
         metric_reader = PeriodicExportingMetricReader(
             metric_exporter,
             export_interval_millis=15000,
