@@ -1,0 +1,25 @@
+name: Validate OTel Instrumentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: python3 -m pip install -r requirements.txt
+
+      - name: Install lint and test tools
+        run: python3 -m pip install ruff pytest
+
+      - name: Lint with ruff
+        run: python3 -m ruff check app/ tests/
+
+      - name: Run tests
+        run: python3 -m pytest tests/ -v
