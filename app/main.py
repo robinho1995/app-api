@@ -135,7 +135,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-setup_telemetry(app=app, app_name="app-api", endpoint="http://172.21.0.8:4317")
+setup_telemetry(app=app, app_name="app-api", endpoint="otel-collector.observability.svc.cluster.local:4317")
 
 app.add_middleware(
     CORSMiddleware,
