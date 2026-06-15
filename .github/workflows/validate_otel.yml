@@ -1,0 +1,44 @@
+name: Validate OpenTelemetry Instrumentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-otel:
+    runs-on: self-hosted
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio ruff
+
+      - name: Run ruff check
+        run: ruff check app/ agent/ tests/
+
+      - name: Run OTel instrumentation tests
+        run: pytest tests/test_otel_instrumentation.py -v
+
+      - name: Run OTel semantic conventions tests
+        run: pytest tests/test_otel_instrumentation.py::TestSemanticConventions -v
+
+      - name: Run MCP queries tests
+        run: |
+          if [ -f tests/test_mcp_queries.py ]; then
+            pytest tests/test_mcp_queries.py -v
+          else
+            echo "test_mcp_queries.py not found — skipping"
+          fi

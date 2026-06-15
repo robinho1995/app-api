@@ -12,6 +12,7 @@ from app.database import engine, Base, check_db_connection
 from app.routers import health
 from app.routers import items as items_router
 import redis.asyncio as aioredis
+from app.telemetry import setup_telemetry, otel_middleware
 
 logging.basicConfig(
     level=logging.INFO,
@@ -136,6 +137,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+setup_telemetry(app_name="app-api", endpoint="http://otel-collector:4317", app=app)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -143,6 +146,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.middleware("http")(otel_middleware)
 
 
 @app.middleware("http")
