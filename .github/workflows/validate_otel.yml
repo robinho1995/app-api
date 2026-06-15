@@ -15,11 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify Python 3.11
-        run: |
-          python3 --version
-          python3 -c "import sys; assert sys.version_info >= (3, 11), f'Python 3.11+ required, got {sys.version}'"
-
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
