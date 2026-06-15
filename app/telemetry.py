@@ -89,7 +89,7 @@ def setup_telemetry(
         _tracer_provider = TracerProvider(resource=resource)
         _tracer_provider.add_span_processor(span_processor)
         trace.set_tracer_provider(_tracer_provider)
-        logger.info("TracerProvider configured with OTLP gRPC exporter at %s", endpoint)
+        logger.info("TracerProvider configured with OTLP HTTP exporter at %s", endpoint)
     except Exception as exc:
         logger.error("Failed to configure TracerProvider: %s", exc)
 
@@ -102,7 +102,7 @@ def setup_telemetry(
         )
         _meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
         metrics.set_meter_provider(_meter_provider)
-        logger.info("MeterProvider configured with OTLP gRPC exporter at %s", endpoint)
+        logger.info("MeterProvider configured with OTLP HTTP exporter at %s", endpoint)
     except Exception as exc:
         logger.error("Failed to configure MeterProvider: %s", exc)
 
