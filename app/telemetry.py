@@ -53,7 +53,7 @@ DEPRECATED_ATTRS = {
 def setup_telemetry(
     app: Optional[FastAPI] = None,
     app_name: str = "app-api",
-    endpoint: str = "http://localhost:4317",
+    endpoint: str = "http://host.k3d.internal:4317",
     service_version: str = "1.0.0",
     deployment_environment: str = "dev",
 ) -> None:

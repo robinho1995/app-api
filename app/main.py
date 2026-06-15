@@ -135,7 +135,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-setup_telemetry(app=app, app_name="app-api", endpoint="http://localhost:4317")
+setup_telemetry(app=app, app_name="app-api", endpoint="http://host.k3d.internal:4317")
 
 app.add_middleware(
     CORSMiddleware,
