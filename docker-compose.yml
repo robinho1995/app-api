@@ -19,7 +19,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       PYTHONUNBUFFERED: "1"
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://172.21.0.8:4317
     depends_on:
       postgres:
         condition: service_healthy
