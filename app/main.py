@@ -1,16 +1,15 @@
 from __future__ import annotations
-import asyncio
 import logging
 import sys
 import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from app.config import settings
 from app.database import engine, Base, check_db_connection
 from app.routers import health
 from app.routers import items as items_router
+from app.telemetry import setup_telemetry
 import redis.asyncio as aioredis
 
 logging.basicConfig(
@@ -114,7 +113,7 @@ async def lifespan(app: FastAPI):
         redis_client = aioredis.from_url(settings.REDIS_URL_COMPUTED, decode_responses=True)
         await redis_client.ping()
         print(f"  {GREEN}✓{RESET}  {BRIGHT}Redis:{RESET}     connected ({settings.REDIS_HOST}:{settings.REDIS_PORT})")
-    except Exception as e:
+    except Exception:
         print(f"  {RED}✗{RESET}  {BRIGHT}Redis:{RESET}     not available — caching disabled")
         redis_client = None
 
@@ -135,6 +134,8 @@ app = FastAPI(
     version=settings.APP_VERSION,
     lifespan=lifespan,
 )
+
+setup_telemetry(app=app, app_name="app-api", endpoint="http://localhost:4317")
 
 app.add_middleware(
     CORSMiddleware,
