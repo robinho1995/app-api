@@ -6,41 +6,34 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  AGENT_TOOLSDIRECTORY: /Users/robsonvieira/Documents/actions-runner/_work/_toolcache
-
 jobs:
   validate:
     runs-on: self-hosted
     timeout-minutes: 15
 
     steps:
-      - name: Create toolcache directory
-        run: mkdir -p $AGENT_TOOLSDIRECTORY
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
+      - name: Verify Python 3.11
+        run: |
+          python3 --version
+          python3 -c "import sys; assert sys.version_info >= (3, 11), f'Python 3.11+ required, got {sys.version}'"
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-asyncio ruff
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt
+          python3 -m pip install pytest pytest-asyncio ruff
 
       - name: Run ruff check
         run: ruff check app/ agent/ tests/
 
       - name: Run OTel instrumentation tests
-        run: pytest tests/test_otel_instrumentation.py -v
+        run: python3 -m pytest tests/test_otel_instrumentation.py -v
 
       - name: Validate semantic conventions
-        run: pytest tests/test_otel_instrumentation.py::TestSemanticConventions -v
+        run: python3 -m pytest tests/test_otel_instrumentation.py::TestSemanticConventions -v
 
       - name: Run MCP query tests
-        run: pytest tests/test_mcp_queries.py -v
+        run: python3 -m pytest tests/test_mcp_queries.py -v
