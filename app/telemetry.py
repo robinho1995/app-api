@@ -45,7 +45,7 @@ ATTR_GEN_AI_TOOL_NAME = "gen_ai.tool.name"
 
 def setup_telemetry(
     app_name: str = "app-api",
-    endpoint: str = "http://otel-collector:4317",
+    endpoint: str = "http://localhost:4317",
     app: Optional[FastAPI] = None,
 ) -> None:
     global _tracer_provider, _meter_provider, _meter
