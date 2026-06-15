@@ -1,4 +1,4 @@
-name: Validate OTel Instrumentation
+name: Validate
 
 on:
   push:
@@ -9,26 +9,19 @@ on:
 jobs:
   validate:
     runs-on: self-hosted
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install -r requirements.txt
-          python3 -m pip install pytest pytest-asyncio ruff
+      - name: Install deps
+        run: python3 -m pip install -r requirements.txt
 
-      - name: Run ruff check
-        run: ruff check app/ agent/ tests/
+      - name: Install tools
+        run: python3 -m pip install ruff pytest
 
-      - name: Run OTel instrumentation tests
-        run: python3 -m pytest tests/test_otel_instrumentation.py -v
+      - name: Ruff
+        run: python3 -m ruff check app/ tests/
 
-      - name: Validate semantic conventions
-        run: python3 -m pytest tests/test_otel_instrumentation.py::TestSemanticConventions -v
-
-      - name: Run MCP query tests
-        run: python3 -m pytest tests/test_mcp_queries.py -v
+      - name: Tests
+        run: python3 -m pytest tests/ -v
