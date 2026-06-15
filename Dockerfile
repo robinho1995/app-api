@@ -22,7 +22,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     OTEL_TRACES_EXPORTER=otlp \
     OTEL_METRICS_EXPORTER=otlp \
     OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector.observability.svc.cluster.local:4318 \
-    OTEL_EXPORTER_OTLP_PROTOCOL=grpc \
+    OTEL_EXPORTER_OTLP_PROTOCOL=http \
     OTEL_RESOURCE_ATTRIBUTES=service.name=app-api,service.version=1.0.0,deployment.environment=dev
 
 RUN groupadd -g 1000 mbauser && \
