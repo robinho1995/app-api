@@ -1,4 +1,4 @@
-name: Validate OpenTelemetry Instrumentation
+name: Validate OTel Instrumentation
 
 on:
   push:
@@ -6,12 +6,18 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  AGENT_TOOLSDIRECTORY: /Users/robsonvieira/Documents/actions-runner/_work/_toolcache
+
 jobs:
-  validate-otel:
+  validate:
     runs-on: self-hosted
     timeout-minutes: 15
 
     steps:
+      - name: Create toolcache directory
+        run: mkdir -p $AGENT_TOOLSDIRECTORY
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -23,6 +29,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-asyncio ruff
 
@@ -32,13 +39,8 @@ jobs:
       - name: Run OTel instrumentation tests
         run: pytest tests/test_otel_instrumentation.py -v
 
-      - name: Run OTel semantic conventions tests
+      - name: Validate semantic conventions
         run: pytest tests/test_otel_instrumentation.py::TestSemanticConventions -v
 
-      - name: Run MCP queries tests
-        run: |
-          if [ -f tests/test_mcp_queries.py ]; then
-            pytest tests/test_mcp_queries.py -v
-          else
-            echo "test_mcp_queries.py not found — skipping"
-          fi
+      - name: Run MCP query tests
+        run: pytest tests/test_mcp_queries.py -v
