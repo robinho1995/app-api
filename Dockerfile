@@ -21,7 +21,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PORT=8000 \
     OTEL_TRACES_EXPORTER=otlp \
     OTEL_METRICS_EXPORTER=otlp \
-    OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 \
+    OTEL_EXPORTER_OTLP_ENDPOINT=http://host.k3d.internal:4317 \
     OTEL_EXPORTER_OTLP_PROTOCOL=grpc \
     OTEL_RESOURCE_ATTRIBUTES=service.name=app-api,service.version=1.0.0,deployment.environment=dev
 
