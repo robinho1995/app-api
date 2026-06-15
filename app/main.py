@@ -11,6 +11,7 @@ from app.routers import health
 from app.routers import items as items_router
 from app.telemetry import setup_telemetry
 import redis.asyncio as aioredis
+import os
 
 logging.basicConfig(
     level=logging.INFO,
@@ -135,7 +136,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-setup_telemetry(app=app, app_name="app-api", endpoint="otel-collector.observability.svc.cluster.local:4318")
+# Pega da variável de ambiente, se não existir usa um fallback
+otel_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
+
+setup_telemetry(app=app, app_name="app-api", endpoint=otel_endpoint)
 
 app.add_middleware(
     CORSMiddleware,
