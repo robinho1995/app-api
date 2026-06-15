@@ -35,21 +35,21 @@ class TestCorrectImports:
         assert "opentelemetry.instrumentation.redis" in source
         assert "opentelemetry.ext." not in source
 
-    def test_otlp_grpc_exporter_from_correct_module(self):
-        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    def test_otlp_http_exporter_from_correct_module(self):
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
             OTLPSpanExporter,
         )
-        from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
+        from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
             OTLPMetricExporter,
         )
 
         assert OTLPSpanExporter is not None
         assert OTLPMetricExporter is not None
 
-    def test_telemetry_imports_otlp_grpc_not_http(self):
+    def test_telemetry_imports_otlp_http_not_grpc(self):
         source = _read_telemetry_source()
-        assert "opentelemetry.exporter.otlp.proto.grpc" in source
-        assert "opentelemetry.exporter.otlp.proto.http" not in source
+        assert "opentelemetry.exporter.otlp.proto.http" in source
+        assert "opentelemetry.exporter.otlp.proto.grpc" not in source
 
 
 class TestSemanticConventions:
@@ -180,7 +180,7 @@ class TestSetupTelemetryFunction:
         sig = inspect.signature(setup_telemetry)
         default_endpoint = sig.parameters["endpoint"].default
         assert "otel-collector.observability.svc.cluster.local" in default_endpoint
-        assert "4317" in default_endpoint
+        assert "4318" in default_endpoint
 
     def test_main_calls_setup_telemetry(self):
         source = _read_main_source()
