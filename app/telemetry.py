@@ -13,7 +13,8 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics.export import ExplicitBucketHistogramAggregation, PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics.view import View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -82,13 +83,22 @@ def setup_telemetry(
         logger.error("Failed to configure TracerProvider: %s", exc)
 
     try:
+        duration_view = View(
+            instrument_type=metrics.Histogram,
+            instrument_name=REQUEST_DURATION_HISTOGRAM,
+            aggregation=ExplicitBucketHistogramAggregation(boundaries=DURATION_BUCKETS),
+        )
         metric_exporter = OTLPMetricExporter(endpoint=endpoint, insecure=True)
         metric_reader = PeriodicExportingMetricReader(
             metric_exporter,
             export_interval_millis=15000,
             export_timeout_millis=10000,
         )
-        _meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
+        _meter_provider = MeterProvider(
+            resource=resource,
+            metric_readers=[metric_reader],
+            views=[duration_view],
+        )
         metrics.set_meter_provider(_meter_provider)
         logger.info("MeterProvider configured with OTLP gRPC exporter at %s", endpoint)
     except Exception as exc:
@@ -128,7 +138,6 @@ def _register_otel_middleware(app: Optional[FastAPI]) -> None:
         name=REQUEST_DURATION_HISTOGRAM,
         description="Duration of HTTP server requests in seconds",
         unit="s",
-        explicit_bucket_boundaries=DURATION_BUCKETS,
     )
 
     request_count = meter.create_counter(
