@@ -17,52 +17,47 @@ spec:
         app: app-api
         tier: backend
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
       containers:
         - name: app-api
           image: app-api:latest
-          securityContext:
-            readOnlyRootFilesystem: true
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           ports:
-            - containerPort: 8000
-          envFrom:
-            - configMapRef:
-                name: app-api-config
-            - secretRef:
-                name: app-api-secrets
+            - containerPort: 8080
+          env:
+            - name: APP_ENV
+              value: "production"
           resources:
             requests:
-              cpu: 100m
-              memory: 128Mi
+              memory: "64Mi"
+              cpu: "50m"
             limits:
-              cpu: 500m
-              memory: 512Mi
+              memory: "256Mi"
+              cpu: "200m"
           livenessProbe:
             httpGet:
               path: /health
-              port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 3
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /health
-              port: 8000
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 3
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp
-            - name: run
-              mountPath: /run
-      volumes:
-        - name: tmp
-          emptyDir: {}
-        - name: run
-          emptyDir: {}
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-api
+  namespace: demo-app-mba
+  labels:
+    app: app-api
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: app-api
