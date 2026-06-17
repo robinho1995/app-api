@@ -1,0 +1,84 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mba-app-alerts
+  namespace: demo-app-mba
+  labels:
+    prometheus: k8s
+    role: alert-rules
+spec:
+  groups:
+    - name: mba-app-alerts
+      rules:
+        - alert: AppAPIHighErrorRate
+          expr: |
+            (
+              sum(rate(http_requests_total{job="app-api",code=~"5.."}[5m]))
+              /
+              sum(rate(http_requests_total{job="app-api"}[5m]))
+            ) > 0.05
+          for: 2m
+          labels:
+            severity: critical
+            blast_radius: "HIGH"
+          annotations:
+            summary: "App-API error rate above 5%"
+            description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes."
+
+        - alert: AppAPIHighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(http_request_duration_seconds_bucket{job="app-api"}[5m]))
+              by (le)
+            ) > 2.0
+          for: 5m
+          labels:
+            severity: warning
+            blast_radius: "MEDIUM"
+          annotations:
+            summary: "App-API P95 latency above 2s"
+            description: "P95 latency is {{ $value }}s for the last 5 minutes."
+
+        - alert: AppAPIPodRestarting
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="demo-app-mba",container="app-api"}[15m]) > 2
+          for: 1m
+          labels:
+            severity: critical
+            blast_radius: "HIGH"
+          annotations:
+            summary: "App-API pod restarting repeatedly"
+            description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes."
+
+        - alert: AppAPIPodNotReady
+          expr: |
+            kube_pod_container_status_ready{namespace="demo-app-mba",container="app-api"} == 0
+          for: 3m
+          labels:
+            severity: warning
+            blast_radius: "MEDIUM"
+          annotations:
+            summary: "App-API pod not ready"
+            description: "Pod {{ $labels.pod }} has been not ready for more than 3 minutes."
+
+        - alert: AppAPIOOMKilled
+          expr: |
+            kube_pod_container_status_last_terminated_reason{namespace="demo-app-mba",container="app-api",reason="OOMKilled"} == 1
+          for: 0m
+          labels:
+            severity: critical
+            blast_radius: "HIGH"
+          annotations:
+            summary: "App-API pod OOMKilled"
+            description: "Pod {{ $labels.pod }} was OOMKilled."
+
+        - alert: AppAPICrashLoopBackOff
+          expr: |
+            kube_pod_container_status_waiting_reason{namespace="demo-app-mba",container="app-api",reason="CrashLoopBackOff"} == 1
+          for: 2m
+          labels:
+            severity: critical
+            blast_radius: "HIGH"
+          annotations:
+            summary: "App-API pod in CrashLoopBackOff"
+            description: "Pod {{ $labels.pod }} is in CrashLoopBackOff."
