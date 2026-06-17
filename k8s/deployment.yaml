@@ -17,34 +17,55 @@ spec:
         app: app-api
         tier: backend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
       containers:
         - name: app-api
           image: app-api:latest
-          imagePullPolicy: Never
+          securityContext:
+            readOnlyRootFilesystem: true
+          imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8080
-          env:
-            - name: APP_ENV
-              value: "production"
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: app-api-config
+            - secretRef:
+                name: app-api-secrets
           resources:
             requests:
-              memory: "64Mi"
-              cpu: "50m"
+              cpu: 100m
+              memory: 128Mi
             limits:
-              memory: "256Mi"
-              cpu: "200m"
+              cpu: 500m
+              memory: 512Mi
           livenessProbe:
             httpGet:
               path: /health
-              port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 10
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /health
-              port: 8080
-            initialDelaySeconds: 3
-            periodSeconds: 5
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: run
+              mountPath: /run
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -56,8 +77,8 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 8000
+      targetPort: 8000
       protocol: TCP
   selector:
     app: app-api
